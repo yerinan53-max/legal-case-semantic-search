@@ -2,7 +2,7 @@ import pandas as pd
 import streamlit as st
 
 from src.analysis import category_counts, extract_issue_keywords
-from src.config import INDEX_DATA_PATH, INDEX_PATH, SAMPLE_DATA_PATH
+from src.config import INDEX_DATA_PATH, INDEX_PATH, default_case_data_path
 from src.data import load_cases
 from src.embedding import LegalEmbedder, resolve_model_name
 from src.search import build_index, load_index, semantic_search
@@ -39,7 +39,7 @@ with st.sidebar:
     uploaded_file = st.file_uploader("판례 CSV 업로드", type=["csv"])
     source_cases = None
     try:
-        source_cases = load_cases(uploaded_file or SAMPLE_DATA_PATH)
+        source_cases = load_cases(uploaded_file or default_case_data_path())
         st.success(f"데이터 {len(source_cases):,}건 확인")
     except ValueError as error:
         st.error(str(error))
@@ -110,4 +110,3 @@ st.divider()
 st.caption(
     "교육·연구용 프로젝트입니다. 검색 결과는 법률 자문이 아니며 실제 판례 원문을 확인해야 합니다."
 )
-

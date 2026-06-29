@@ -87,6 +87,15 @@ VS Code에서 `notebooks/train_embedding_model.ipynb`를 열고 커널을
 4. 유사 판례 쌍을 이용한 선택적 미세조정
 5. 학습 모델 저장과 전체 판례 인덱스 생성
 
+AI Hub 원본을 `data/raw/`에 내려받은 뒤 먼저 다음 명령으로 로컬 전처리를
+실행합니다.
+
+```powershell
+python scripts\preprocess_aihub.py --max-cases 20000 --max-pairs 20000
+```
+
+생성되는 `data/processed/`의 CSV 파일은 이용조건에 따라 GitHub에서 제외됩니다.
+
 ## 주의사항
 
 이 앱은 교육 및 연구용이며 법률 자문을 제공하지 않습니다. 검색 결과는 실제

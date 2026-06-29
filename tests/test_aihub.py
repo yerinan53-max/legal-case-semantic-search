@@ -25,7 +25,8 @@ def test_convert_label_record_creates_case_and_pair():
     assert converted is not None
     case, pairs = converted
     assert case["id"] == "123"
-    assert case["category"] == "계약"
+    assert case["category"] == "민사"
+    assert "계약" in case["issues"]
     assert pairs[0]["case_id"] == "123"
     assert "판결요약" in pairs[0]["positive"]
 

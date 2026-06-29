@@ -72,10 +72,13 @@ def convert_label_record(
     issues = ", ".join(dict.fromkeys(item for item in keywords if item))
 
     class_info = record.get("Class_info") or {}
-    refined_category = _clean_text(
-        class_info.get("instance_name") or class_info.get("class_name") or category,
+    refined_category = _clean_text(category, 200)
+    detailed_issue = _clean_text(
+        class_info.get("instance_name") or class_info.get("class_name"),
         200,
     )
+    if detailed_issue and detailed_issue not in issues:
+        issues = ", ".join(item for item in [detailed_issue, issues] if item)
     case_name = _clean_text(
         info.get("caseNm") or info.get("caseTitle") or "사건명 없음",
         500,

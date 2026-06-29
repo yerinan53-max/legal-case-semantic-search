@@ -87,6 +87,10 @@ VS Code에서 `notebooks/train_embedding_model.ipynb`를 열고 커널을
 4. 유사 판례 쌍을 이용한 선택적 미세조정
 5. 학습 모델 저장과 전체 판례 인덱스 생성
 
+실험에서는 다국어 MiniLM, 한국어 Ko-SRoBERTa, 법률 데이터로 미세조정한
+Ko-SRoBERTa를 동일한 검증셋에서 비교합니다. Notebook은 Recall@1/3/5,
+검증 처리 시간, 파인튜닝 loss 그래프를 생성합니다.
+
 AI Hub 원본을 `data/raw/`에 내려받은 뒤 먼저 다음 명령으로 로컬 전처리를
 실행합니다.
 

@@ -13,6 +13,8 @@ data/private/
 .env
 streamlit.log
 streamlit-error.log
+index-build.log
+index-build-error.log
 *.zip
 *.7z
 *.tar

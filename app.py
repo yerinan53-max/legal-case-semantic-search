@@ -44,13 +44,26 @@ with st.sidebar:
     except ValueError as error:
         st.error(str(error))
 
-    if st.button("인덱스 생성", type="primary", use_container_width=True):
+    index_ready = INDEX_PATH.exists() and INDEX_DATA_PATH.exists()
+    uploaded_data = uploaded_file is not None
+    build_disabled = index_ready and not uploaded_data
+    button_label = (
+        "업로드 데이터로 인덱스 생성" if uploaded_data else "인덱스 생성"
+    )
+
+    if st.button(
+        button_label,
+        type="primary",
+        use_container_width=True,
+        disabled=build_disabled,
+    ):
         if source_cases is not None:
             rebuild_index(source_cases)
             st.success("검색 인덱스 생성 완료")
 
-    index_ready = INDEX_PATH.exists() and INDEX_DATA_PATH.exists()
     st.info("인덱스 준비됨" if index_ready else "인덱스 생성이 필요합니다.")
+    if build_disabled:
+        st.caption("학습 Notebook에서 생성한 인덱스를 사용 중입니다.")
 
 query = st.text_area(
     "사건 내용 또는 법률 쟁점",

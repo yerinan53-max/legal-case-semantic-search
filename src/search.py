@@ -75,8 +75,12 @@ def build_index(
     embedder: LegalEmbedder,
     embedding_path: Path = INDEX_PATH,
     data_path: Path = INDEX_DATA_PATH,
+    batch_size: int = 64,
 ) -> np.ndarray:
-    embeddings = embedder.encode(documents_from_cases(cases))
+    embeddings = embedder.encode(
+        documents_from_cases(cases),
+        batch_size=batch_size,
+    )
     embedding_path.parent.mkdir(parents=True, exist_ok=True)
     np.save(embedding_path, embeddings)
     cases.to_csv(data_path, index=False, encoding="utf-8-sig")

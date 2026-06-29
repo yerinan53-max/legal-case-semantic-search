@@ -25,15 +25,17 @@ def load_cases(path_or_buffer: str | Path | object) -> pd.DataFrame:
 
 def build_document_text(row: pd.Series) -> str:
     """Combine searchable legal fields into one embedding document."""
+    issues = row["issues"][:500]
+    summary = row["summary"][:1_200]
+    body = row["text"][:800]
     return (
         f"사건명: {row['case_name']}\n"
         f"분야: {row['category']}\n"
-        f"쟁점: {row['issues']}\n"
-        f"판결요지: {row['summary']}\n"
-        f"본문: {row['text']}"
+        f"쟁점: {issues}\n"
+        f"판결요지: {summary}\n"
+        f"본문: {body}"
     )
 
 
 def documents_from_cases(cases: pd.DataFrame) -> list[str]:
     return [build_document_text(row) for _, row in cases.iterrows()]
-

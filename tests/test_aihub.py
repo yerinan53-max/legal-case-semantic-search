@@ -1,7 +1,11 @@
 from io import BytesIO
 from zipfile import ZIP_DEFLATED, ZipFile
 
-from src.aihub import convert_label_record, open_aihub_zip
+from src.aihub import (
+    convert_label_record,
+    open_aihub_zip,
+    source_record_fallback,
+)
 
 
 def test_convert_label_record_creates_case_and_pair():
@@ -33,6 +37,48 @@ def test_convert_label_record_creates_case_and_pair():
 
 def test_convert_label_record_requires_id_and_judgment():
     assert convert_label_record({"info": {"id": 1}}, "민사") is None
+
+
+def test_convert_label_record_recovers_missing_judgment_from_source():
+    record = {
+        "info": {
+            "id": 456,
+            "caseNo": "2025테스트2",
+            "caseNm": "본문 복구 사건",
+        },
+        "jdgmn": "",
+        "Summary": [],
+        "jdgmnInfo": [],
+    }
+    fallback = {
+        "text": "원천데이터에서 복구한 판결문",
+        "summary": "복구한 요약",
+        "source_url": "/test",
+    }
+
+    converted = convert_label_record(record, "민사", fallback)
+
+    assert converted is not None
+    case, _ = converted
+    assert case["text"] == "원천데이터에서 복구한 판결문"
+    assert case["summary"] == "복구한 요약"
+
+
+def test_source_record_fallback_supports_administrative_appeal():
+    fallback = source_record_fallback(
+        {
+            "사건번호": "2000-00001",
+            "이유": "처분 사유",
+            "재결요지": "재결 요약",
+            "청구취지": "취소 청구",
+            "주문": "청구 기각",
+        }
+    )
+
+    assert fallback is not None
+    case_number, values = fallback
+    assert case_number == "2000-00001"
+    assert "처분 사유" in values["text"]
 
 
 def test_open_aihub_zip_repairs_missing_comment_length(tmp_path):

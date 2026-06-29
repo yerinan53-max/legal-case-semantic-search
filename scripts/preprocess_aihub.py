@@ -5,7 +5,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from src.aihub import convert_archives, discover_label_archives
+from src.aihub import (
+    collect_label_case_numbers,
+    convert_archives,
+    discover_label_archives,
+    discover_source_archives,
+    load_source_fallbacks,
+)
 from src.config import (
     PROCESSED_CASES_PATH,
     PROCESSED_DATA_DIR,
@@ -34,7 +40,9 @@ def save_result(result, case_path: Path, pair_path: Path, label: str) -> None:
     result.pairs.to_csv(pair_path, index=False, encoding="utf-8-sig")
     print(
         f"{label}: 스캔 {result.scanned_records:,}건, "
-        f"판례 {len(result.cases):,}건, 학습쌍 {len(result.pairs):,}개"
+        f"판례 {len(result.cases):,}건, 학습쌍 {len(result.pairs):,}개, "
+        f"원천본문 적용 {result.enriched_records:,}건, "
+        f"결측 복구 {result.recovered_records:,}건"
     )
     for archive in result.broken_archives:
         print(f"경고: 손상된 압축파일을 건너뜀 - {archive.name}")
@@ -46,20 +54,39 @@ def main() -> None:
     args = parse_args()
     train_archives = discover_label_archives(RAW_DATA_DIR, "Training")
     validation_archives = discover_label_archives(RAW_DATA_DIR, "Validation")
+    train_source_archives = discover_source_archives(RAW_DATA_DIR, "Training")
+    validation_source_archives = discover_source_archives(
+        RAW_DATA_DIR,
+        "Validation",
+    )
     if not train_archives:
         raise FileNotFoundError(f"Training 라벨 ZIP을 찾을 수 없습니다: {RAW_DATA_DIR}")
+
+    print("원천데이터에서 누락 본문을 연결하고 있습니다...")
+    train_case_numbers = collect_label_case_numbers(train_archives)
+    validation_case_numbers = collect_label_case_numbers(validation_archives)
+    train_fallbacks = load_source_fallbacks(
+        train_source_archives,
+        train_case_numbers,
+    )
+    validation_fallbacks = load_source_fallbacks(
+        validation_source_archives,
+        validation_case_numbers,
+    )
 
     train_result = convert_archives(
         train_archives,
         max_cases=args.max_cases,
         max_pairs=args.max_pairs,
         seed=args.seed,
+        source_fallbacks=train_fallbacks,
     )
     validation_result = convert_archives(
         validation_archives,
         max_cases=args.max_validation_cases,
         max_pairs=args.max_validation_pairs,
         seed=args.seed + 1,
+        source_fallbacks=validation_fallbacks,
     )
 
     save_result(

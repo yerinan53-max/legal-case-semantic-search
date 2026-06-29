@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from src.search import semantic_search
+from src.search import expand_legal_query, semantic_search
 
 
 class FakeEmbedder:
@@ -36,3 +36,13 @@ def test_exact_legal_term_reranks_close_semantic_results():
 
     assert results.iloc[0]["case_name"] == "폭행"
     assert results.iloc[0]["semantic_similarity"] == np.float32(0.56)
+
+
+def test_used_car_query_expands_to_legal_issues():
+    expanded = expand_legal_query(
+        "중고차를 무사고 차량이라고 해서 구매했는데 사고 이력이 발견됐다."
+    )
+
+    assert "기망" in expanded
+    assert "고지의무" in expanded
+    assert "하자담보책임" in expanded

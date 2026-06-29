@@ -6,7 +6,9 @@ __pycache__/
 .streamlit/secrets.toml
 artifacts/
 models/
+data/raw/
+data/processed/
+data/downloads/
 .env
 streamlit.log
 streamlit-error.log
-

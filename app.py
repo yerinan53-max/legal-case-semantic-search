@@ -94,9 +94,12 @@ if search_clicked:
             for rank, row in results.iterrows():
                 title = (
                     f"{rank + 1}. {row['case_name']} "
-                    f"· 유사도 {row['similarity']:.1%}"
+                    f"· 검색점수 {row['similarity']:.1%}"
                 )
                 with st.expander(title, expanded=rank == 0):
+                    st.write(
+                        f"**의미 유사도:** {row['semantic_similarity']:.1%}"
+                    )
                     st.write(
                         f"**법원/선고일:** {row['court']} / {row['decision_date']}"
                     )

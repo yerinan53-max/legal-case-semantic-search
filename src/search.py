@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 
 import numpy as np
 import pandas as pd
@@ -6,6 +7,33 @@ import pandas as pd
 from src.config import INDEX_DATA_PATH, INDEX_PATH
 from src.data import documents_from_cases
 from src.embedding import LegalEmbedder
+
+
+def _normalize_text(text: object) -> str:
+    return re.sub(r"[^가-힣A-Za-z0-9]", "", str(text)).lower()
+
+
+def _lexical_scores(query: str, cases: pd.DataFrame) -> np.ndarray:
+    query_normalized = _normalize_text(query)
+    query_terms = re.findall(r"[가-힣A-Za-z0-9]{2,}", query.lower())
+    scores = []
+
+    for _, row in cases.iterrows():
+        title = _normalize_text(row.get("case_name", ""))
+        searchable = _normalize_text(
+            f"{row.get('case_name', '')} {row.get('issues', '')} "
+            f"{row.get('summary', '')}"
+        )
+        exact_title = bool(title and title in query_normalized)
+        term_overlap = (
+            sum(_normalize_text(term) in searchable for term in query_terms)
+            / len(query_terms)
+            if query_terms
+            else 0.0
+        )
+        scores.append(min(1.0, 0.7 * float(exact_title) + 0.3 * term_overlap))
+
+    return np.asarray(scores, dtype="float32")
 
 
 def build_index(
@@ -44,9 +72,11 @@ def semantic_search(
     if not query.strip():
         raise ValueError("검색할 사건 내용이나 쟁점을 입력하세요.")
     query_embedding = embedder.encode([query])[0]
-    scores = embeddings @ query_embedding
+    semantic_scores = embeddings @ query_embedding
+    lexical_scores = _lexical_scores(query, cases)
+    scores = 0.9 * semantic_scores + 0.1 * lexical_scores
     top_indices = np.argsort(scores)[::-1][: min(top_k, len(cases))]
     results = cases.iloc[top_indices].copy()
     results.insert(0, "similarity", scores[top_indices])
+    results.insert(1, "semantic_similarity", semantic_scores[top_indices])
     return results.reset_index(drop=True)
-

@@ -1,4 +1,7 @@
-from src.aihub import convert_label_record
+from io import BytesIO
+from zipfile import ZIP_DEFLATED, ZipFile
+
+from src.aihub import convert_label_record, open_aihub_zip
 
 
 def test_convert_label_record_creates_case_and_pair():
@@ -29,3 +32,17 @@ def test_convert_label_record_creates_case_and_pair():
 
 def test_convert_label_record_requires_id_and_judgment():
     assert convert_label_record({"info": {"id": 1}}, "민사") is None
+
+
+def test_open_aihub_zip_repairs_missing_comment_length(tmp_path):
+    buffer = BytesIO()
+    with ZipFile(buffer, "w", ZIP_DEFLATED) as zipped:
+        zipped.writestr("sample.json", "{}")
+
+    damaged_path = tmp_path / "damaged.zip"
+    damaged_path.write_bytes(buffer.getvalue()[:-2])
+
+    zipped, repaired = open_aihub_zip(damaged_path)
+    with zipped:
+        assert repaired is True
+        assert zipped.read("sample.json") == b"{}"

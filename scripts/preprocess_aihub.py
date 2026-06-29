@@ -38,6 +38,8 @@ def save_result(result, case_path: Path, pair_path: Path, label: str) -> None:
     )
     for archive in result.broken_archives:
         print(f"경고: 손상된 압축파일을 건너뜀 - {archive.name}")
+    for archive in result.repaired_archives:
+        print(f"자동 복구: ZIP 끝부분 2바이트 보완 - {archive.name}")
 
 
 def main() -> None:

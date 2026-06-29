@@ -1,6 +1,7 @@
 import json
 import random
 from dataclasses import dataclass
+from io import BytesIO
 from pathlib import Path
 from zipfile import BadZipFile, ZipFile
 
@@ -12,6 +13,7 @@ class ConversionResult:
     cases: pd.DataFrame
     pairs: pd.DataFrame
     broken_archives: list[Path]
+    repaired_archives: list[Path]
     scanned_records: int
 
 
@@ -26,6 +28,17 @@ def discover_label_archives(raw_dir: Path, split: str) -> list[Path]:
 def archive_category(path: Path) -> str:
     stem = path.stem
     return stem.split(".", 1)[1] if "." in stem else stem
+
+
+def open_aihub_zip(path: Path) -> tuple[ZipFile, bool]:
+    try:
+        return ZipFile(path), False
+    except BadZipFile:
+        data = path.read_bytes()
+        # Some AI Hub archives omit the final two-byte ZIP comment-length field.
+        if len(data) >= 20 and data[-20:-16] == b"PK\x05\x06":
+            return ZipFile(BytesIO(data + b"\x00\x00")), True
+        raise
 
 
 def _clean_text(value: object, max_chars: int = 12_000) -> str:
@@ -112,12 +125,16 @@ def convert_archives(
     rng = random.Random(seed)
     reservoir: list[tuple[dict, list[dict]]] = []
     broken_archives: list[Path] = []
+    repaired_archives: list[Path] = []
     scanned_records = 0
 
     for archive in archives:
         category = archive_category(archive)
         try:
-            with ZipFile(archive) as zipped:
+            zipped, repaired = open_aihub_zip(archive)
+            if repaired:
+                repaired_archives.append(archive)
+            with zipped:
                 members = [item for item in zipped.infolist() if not item.is_dir()]
                 for member in members:
                     try:
@@ -157,5 +174,6 @@ def convert_archives(
         cases=cases,
         pairs=pair_frame,
         broken_archives=broken_archives,
+        repaired_archives=repaired_archives,
         scanned_records=scanned_records,
     )

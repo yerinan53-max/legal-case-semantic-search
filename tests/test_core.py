@@ -1,6 +1,7 @@
 import pandas as pd
 import pytest
 
+from src import embedding
 from src.analysis import category_counts, extract_issue_keywords
 from src.data import build_document_text, load_cases
 
@@ -47,3 +48,14 @@ def test_issue_analysis():
     assert extract_issue_keywords(results)[0][0] in {"계약", "손해배상"}
     assert category_counts(results).iloc[0]["count"] == 2
 
+
+def test_selected_model_file_takes_precedence(tmp_path, monkeypatch):
+    selected_model = tmp_path / "legal-sbert-epoch3"
+    selected_model.mkdir()
+    (selected_model / "config.json").write_text("{}", encoding="utf-8")
+    selected_file = tmp_path / "selected_model.txt"
+    selected_file.write_text(str(selected_model), encoding="utf-8")
+
+    monkeypatch.setattr(embedding, "SELECTED_MODEL_FILE", selected_file)
+
+    assert embedding.resolve_model_name() == str(selected_model)

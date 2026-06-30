@@ -3,7 +3,9 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = PROJECT_ROOT / "data"
 ARTIFACT_DIR = PROJECT_ROOT / "artifacts"
-MODEL_DIR = PROJECT_ROOT / "models" / "legal-sbert"
+MODEL_ROOT = PROJECT_ROOT / "models"
+MODEL_DIR = MODEL_ROOT / "legal-sbert"
+SELECTED_MODEL_FILE = MODEL_ROOT / "selected_model.txt"
 
 SAMPLE_DATA_PATH = DATA_DIR / "sample_cases.csv"
 SAMPLE_PAIR_PATH = DATA_DIR / "training_pairs.csv"
